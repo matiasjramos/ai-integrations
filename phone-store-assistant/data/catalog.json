@@ -1,0 +1,82 @@
+[
+  {
+    "id": "SAM-A15-128",
+    "brand": "Samsung",
+    "model": "Galaxy A15",
+    "storage_gb": 128,
+    "price_ars": 289999,
+    "stock": 12
+  },
+  {
+    "id": "SAM-A55-256",
+    "brand": "Samsung",
+    "model": "Galaxy A55",
+    "storage_gb": 256,
+    "price_ars": 649999,
+    "stock": 5
+  },
+  {
+    "id": "SAM-S24-256",
+    "brand": "Samsung",
+    "model": "Galaxy S24",
+    "storage_gb": 256,
+    "price_ars": 1299999,
+    "stock": 2
+  },
+  {
+    "id": "MOT-G24-128",
+    "brand": "Motorola",
+    "model": "Moto G24",
+    "storage_gb": 128,
+    "price_ars": 229999,
+    "stock": 20
+  },
+  {
+    "id": "MOT-E40-256",
+    "brand": "Motorola",
+    "model": "Edge 40",
+    "storage_gb": 256,
+    "price_ars": 699999,
+    "stock": 0
+  },
+  {
+    "id": "XIA-RN13-128",
+    "brand": "Xiaomi",
+    "model": "Redmi Note 13",
+    "storage_gb": 128,
+    "price_ars": 349999,
+    "stock": 8
+  },
+  {
+    "id": "XIA-RN13-256",
+    "brand": "Xiaomi",
+    "model": "Redmi Note 13",
+    "storage_gb": 256,
+    "price_ars": 399999,
+    "stock": 3
+  },
+  {
+    "id": "APL-IP15-128",
+    "brand": "Apple",
+    "model": "iPhone 15",
+    "storage_gb": 128,
+    "price_ars": 1599999,
+    "stock": 1
+  },
+  {
+    "id": "APL-IP15-256",
+    "brand": "Apple",
+    "model": "iPhone 15",
+    "storage_gb": 256,
+    "price_ars": 1849999,
+    "stock": 0
+  },
+  {
+    "id": "APL-IP13-128",
+    "brand": "Apple",
+    "model": "iPhone 13",
+    "storage_gb": 128,
+    "price_ars": 999999,
+    "stock": 4
+  }
+]
