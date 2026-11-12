@@ -42,8 +42,8 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 
 ## Tasks
 
-- [ ] T1 Repo scaffold: root `.gitignore`, task doc, project skeleton (`pyproject`/requirements, `.env.example`, sample `catalog.json`). Route: inline (mechanical).
-- [ ] T2 Domain + adapters: catalog (JSON, Sheets, Fallback), leads (SQLite), notifier (Telegram/Null) + unit tests. Route: delegated writer (2+ non-trivial files).
+- [x] T1 Repo scaffold: root `.gitignore`, task doc, project skeleton (`pyproject`/requirements, `.env.example`, sample `catalog.json`). Route: inline (mechanical).
+- [x] T2 Domain + adapters: catalog (JSON, Sheets, Fallback), leads (SQLite), notifier (Telegram/Null) + unit tests. Route: delegated writer (2+ non-trivial files).
 - [ ] T3 Tools + agent loop (Claude tool use, strict tools, caching, error handling) + tests with a fake client. Route: delegated writer.
 - [ ] T4 Streamlit chat UI + project README (problem, diagram, run, cost, improvements). Route: TBD.
 - [ ] T5 Manual end-to-end run with real API key (user) + secret scan before push.
@@ -57,8 +57,9 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 
 ## Progress
 
-- T1 in progress.
+- T1 done (commit fb07b72). `.env.example` blocked by permission deny rule on `.env*`; pending user action.
+- T2 done: 23 tests pass (`.venv/Scripts/python -m pytest -q`, parent re-ran). Malformed Sheets row fails whole load → FallbackCatalog serves JSON. Engram mirror pending (ambiguous session).
 
 ## Next step
 
-Finish T1 scaffold, commit.
+T3 tools + agent loop (delegated writer).
