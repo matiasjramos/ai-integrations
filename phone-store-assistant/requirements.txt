@@ -5,3 +5,4 @@ python-dotenv>=1.0
 streamlit>=1.40
 pytest>=8.0
 google-genai>=1.0
+httpx2>=2.0
