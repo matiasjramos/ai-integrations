@@ -63,7 +63,7 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 - T2 review: medium risk, granted, approved + acknowledged (lineage review-097cb23b148c4105). Reviewed boundary → 59b3a0c. Non-blocking follow-ups: FallbackCatalog when both sources fail; JsonCatalog with non-list payload; config tests depend on data file; list_recent limit bounds; Sheets adapter boundaries.
 - T3 done: 63 tests pass (parent re-ran). Both-sources catalog failure now handled as tool error. Unverified until T5: real Gemini/Claude calls; Gemini acceptance of `minimum` in schemas. Note: catalog loaded per tool call (one Sheets read per call) → caching candidate.
 - T3 review (lineage review-b41e8b0f19db1584): granted. Reviewer flagged `httpx2` import as typo (BLOCKER); correction ba475ab declared `httpx2>=2.0` in requirements. Targeted validator rejected it assuming httpx2 does not exist — false: PyPI lists httpx2 2.0.0–2.16.0, required by anthropic and google-genai; 63 tests pass. Review stopped `native_stop_required` (escalated, terminal). No further review action; delivery follows ordinary policy.
-- T4 done: app.py + README + 4 AppTest tests; 67 tests pass (parent re-ran). `.env.example` still missing (README references it).
+- T4 done: app.py + README + 4 AppTest tests; 67 tests pass (parent re-ran). `.env.example` still missing (README references it). T4 review assess: medium, under_budget (293 lines) → pending in slice from ba475ab.
 
 ## Next step
 
