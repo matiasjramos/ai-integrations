@@ -1,6 +1,7 @@
 """Settings loaded from the environment.
 
-ANTHROPIC_API_KEY is deliberately absent: the Anthropic SDK reads it itself,
+API keys (ANTHROPIC_API_KEY, GEMINI_API_KEY/GOOGLE_API_KEY) are deliberately absent:
+the SDKs read them themselves,
 so the key never travels through our own objects (or logs).
 """
 
@@ -12,6 +13,7 @@ from dotenv import load_dotenv
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 VALID_EFFORTS = {"low", "medium", "high"}
+VALID_PROVIDERS = {"gemini", "claude"}
 
 
 @dataclass(frozen=True)
@@ -25,6 +27,10 @@ class Settings:
     telegram_chat_id: str | None
     leads_db_path: str
     catalog_json_path: Path
+    # Defaults keep direct Settings(...) construction (tests) working.
+    llm_provider: str = "gemini"
+    gemini_model: str = "gemini-flash-latest"
+    max_tool_iterations: int = 6
 
 
 def _get(name: str, default: str | None = None) -> str | None:
@@ -38,9 +44,21 @@ def load_settings() -> Settings:
     effort = _get("CLAUDE_EFFORT", "medium")
     if effort not in VALID_EFFORTS:
         raise ValueError(f"CLAUDE_EFFORT must be one of {sorted(VALID_EFFORTS)}, got {effort!r}")
+    provider = _get("LLM_PROVIDER", "gemini")
+    if provider not in VALID_PROVIDERS:
+        raise ValueError(f"LLM_PROVIDER must be one of {sorted(VALID_PROVIDERS)}, got {provider!r}")
+    try:
+        max_iterations = int(_get("MAX_TOOL_ITERATIONS", "6"))
+    except ValueError:
+        raise ValueError("MAX_TOOL_ITERATIONS must be an integer") from None
+    if max_iterations < 1:
+        raise ValueError("MAX_TOOL_ITERATIONS must be >= 1")
     # Resolve relative to the project, not the cwd, so it works from any launch dir.
     catalog_path = Path(_get("CATALOG_JSON_PATH") or PROJECT_DIR / "data" / "catalog.json")
     return Settings(
+        llm_provider=provider,
+        gemini_model=_get("GEMINI_MODEL", "gemini-flash-latest"),
+        max_tool_iterations=max_iterations,
         anthropic_model=_get("CLAUDE_MODEL", "claude-opus-5-5"),
         effort=effort,
         google_service_account_file=_get("GOOGLE_SERVICE_ACCOUNT_FILE"),
