@@ -66,6 +66,7 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 - T4 done: app.py + README + 4 AppTest tests; 67 tests pass (parent re-ran). `.env.example` still missing (README references it). T4 review assess: medium, under_budget (293 lines) → pending in slice from ba475ab.
 - T5 run 1: Gemini 404 — default alias `gemini-flash-latest` not available. User listed models with own key; default → `gemini-3.8-flash`. Gemini errors now mapped: 404 → check GEMINI_MODEL, 401/403 → check key, 429 → busy. 71 tests pass.
 - T5 run 2: gemini-3.8-flash 503 UNAVAILABLE ("high demand"). Added fallback model (GEMINI_FALLBACK_MODEL, default gemini-2.5-flash) on 429/503 only; config errors never fall back. 74 tests pass.
+- Slice review ba475ab..a27f405 (lineage review-848fbcfb268a892f): granted, approved + acknowledged. Follow-ups (non-blocking): sticky fallback within a turn; backoff/retry-after on 429; use getattr for exc.code in _generate; test factory fallback wiring + GEMINI_FALLBACK_MODEL default; guard sidebar leads query and session construction in app.py; orphan user message after ChatError; README references missing .env.example.
 
 ## Next step
 
