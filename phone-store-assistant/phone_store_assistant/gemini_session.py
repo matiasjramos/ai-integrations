@@ -71,7 +71,11 @@ class GeminiChatSession:
         except errors.APIError as exc:
             del self._history[checkpoint:]
             code = getattr(exc, "code", None)
-            logger.error("Gemini API error: code=%s model=%s", code, self._model)
+            # Google's status/message describe the failure and never contain the key.
+            logger.error(
+                "Gemini API error: code=%s status=%s model=%s message=%s",
+                code, getattr(exc, "status", None), self._model, getattr(exc, "message", None),
+            )
             raise ChatError(_message_for_status(code)) from None
         except OSError as exc:  # ConnectionError/TimeoutError are OSError subclasses
             del self._history[checkpoint:]
