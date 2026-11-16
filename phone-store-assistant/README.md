@@ -82,7 +82,7 @@ API keys (`GEMINI_API_KEY`/`GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`) are read by th
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `LLM_PROVIDER` | `gemini` | `gemini` or `claude` |
-| `GEMINI_MODEL` | `gemini-flash-latest` | Gemini model |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Gemini model |
 | `CLAUDE_MODEL` | `claude-opus-5-5` | Claude model (`claude-haiku-5-5` is cheaper) |
 | `CLAUDE_EFFORT` | `medium` | `low`, `medium` or `high` |
 | `MAX_TOOL_ITERATIONS` | `6` | Max model calls per user message |

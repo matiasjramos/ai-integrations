@@ -29,7 +29,7 @@ class Settings:
     catalog_json_path: Path
     # Defaults keep direct Settings(...) construction (tests) working.
     llm_provider: str = "gemini"
-    gemini_model: str = "gemini-flash-latest"
+    gemini_model: str = "gemini-3.8-flash"
     max_tool_iterations: int = 6
 
 
@@ -57,7 +57,7 @@ def load_settings() -> Settings:
     catalog_path = Path(_get("CATALOG_JSON_PATH") or PROJECT_DIR / "data" / "catalog.json")
     return Settings(
         llm_provider=provider,
-        gemini_model=_get("GEMINI_MODEL", "gemini-flash-latest"),
+        gemini_model=_get("GEMINI_MODEL", "gemini-3.8-flash"),
         max_tool_iterations=max_iterations,
         anthropic_model=_get("CLAUDE_MODEL", "claude-opus-5-5"),
         effort=effort,

@@ -49,7 +49,7 @@ class FakeClient:
 def session(script, max_iterations=6):
     executor = ToolExecutor(Catalog(), SqliteLeadRepository(":memory:"), LogNotifier())
     client = FakeClient(script)
-    return GeminiChatSession(client, "gemini-flash-latest", executor, max_iterations), client
+    return GeminiChatSession(client, "gemini-3.8-flash", executor, max_iterations), client
 
 
 def test_function_call_loop_and_config():
@@ -105,3 +105,13 @@ def test_api_error_becomes_chat_error_and_rolls_back():
     assert s.send("three") == "recovered"
     users = [c.parts[0].text for c in client.calls[2]["contents"] if c.role == "user"]
     assert users == ["one", "three"]
+
+
+@pytest.mark.parametrize(
+    ("code", "expected"),
+    [(404, "GEMINI_MODEL"), (403, "GEMINI_API_KEY"), (429, "busy"), (500, "had a problem")],
+)
+def test_api_error_message_depends_on_status(code, expected):
+    s, _ = session([errors.APIError(code, {"error": {"message": "x"}})])
+    with pytest.raises(ChatError, match=expected):
+        s.send("hi")

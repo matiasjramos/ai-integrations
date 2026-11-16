@@ -19,6 +19,17 @@ _LIMIT_MSG = "Sorry, I couldn't complete that request. Could you rephrase or try
 _EMPTY_MSG = "Sorry, I couldn't generate an answer. Please try again."
 
 
+def _message_for_status(code: int | None) -> str:
+    """Separate config errors (fix the setup, retrying won't help) from transient ones."""
+    if code == 404:
+        return "Model not found. Check GEMINI_MODEL in your .env."
+    if code in (401, 403):
+        return "The Gemini API key is invalid or lacks access. Check GEMINI_API_KEY."
+    if code == 429:
+        return "The assistant is busy right now. Please try again shortly."
+    return "The assistant had a problem. Please try again."
+
+
 def _gemini_schema(schema: dict) -> dict:
     """Copy without additionalProperties: not all Gemini endpoints accept it."""
     clean = copy.deepcopy(schema)
@@ -59,12 +70,9 @@ class GeminiChatSession:
             return self._run_loop()
         except errors.APIError as exc:
             del self._history[checkpoint:]
-            logger.error("Gemini API error: code=%s", getattr(exc, "code", None))
-            if getattr(exc, "code", None) == 429:
-                raise ChatError(
-                    "The assistant is busy right now. Please try again shortly."
-                ) from None
-            raise ChatError("The assistant had a problem. Please try again.") from None
+            code = getattr(exc, "code", None)
+            logger.error("Gemini API error: code=%s model=%s", code, self._model)
+            raise ChatError(_message_for_status(code)) from None
         except OSError as exc:  # ConnectionError/TimeoutError are OSError subclasses
             del self._history[checkpoint:]
             logger.error("Gemini network error: %s", type(exc).__name__)
