@@ -29,10 +29,10 @@ class Settings:
     catalog_json_path: Path
     # Defaults keep direct Settings(...) construction (tests) working.
     llm_provider: str = "gemini"
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.6-flash"
     max_tool_iterations: int = 6
     # Used when the primary model is overloaded (503) or rate limited (429).
-    gemini_fallback_model: str | None = "gemini-2.5-flash"
+    gemini_fallback_model: str | None = "gemini-3.5-flash-lite"
 
 
 def _get(name: str, default: str | None = None) -> str | None:
@@ -59,8 +59,8 @@ def load_settings() -> Settings:
     catalog_path = Path(_get("CATALOG_JSON_PATH") or PROJECT_DIR / "data" / "catalog.json")
     return Settings(
         llm_provider=provider,
-        gemini_model=_get("GEMINI_MODEL", "gemini-3.8-flash"),
-        gemini_fallback_model=_get("GEMINI_FALLBACK_MODEL", "gemini-2.5-flash"),
+        gemini_model=_get("GEMINI_MODEL", "gemini-3.6-flash"),
+        gemini_fallback_model=_get("GEMINI_FALLBACK_MODEL", "gemini-3.5-flash-lite"),
         max_tool_iterations=max_iterations,
         anthropic_model=_get("CLAUDE_MODEL", "claude-opus-5-5"),
         effort=effort,

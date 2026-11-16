@@ -19,7 +19,8 @@ def clean_env(monkeypatch):
 def test_defaults():
     s = load_settings()
     assert s.llm_provider == "gemini"
-    assert s.gemini_model == "gemini-3.8-flash"
+    assert s.gemini_model == "gemini-3.6-flash"
+    assert s.gemini_fallback_model == "gemini-3.5-flash-lite"
     assert s.max_tool_iterations == 6
 
 
