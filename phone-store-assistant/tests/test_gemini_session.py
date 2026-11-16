@@ -46,10 +46,11 @@ class FakeClient:
         return item
 
 
-def session(script, max_iterations=6):
+def session(script, max_iterations=6, fallback_model=None):
     executor = ToolExecutor(Catalog(), SqliteLeadRepository(":memory:"), LogNotifier())
     client = FakeClient(script)
-    return GeminiChatSession(client, "gemini-3.8-flash", executor, max_iterations), client
+    return GeminiChatSession(client, "gemini-3.8-flash", executor, max_iterations,
+                             fallback_model=fallback_model), client
 
 
 def test_function_call_loop_and_config():
@@ -115,3 +116,29 @@ def test_api_error_message_depends_on_status(code, expected):
     s, _ = session([errors.APIError(code, {"error": {"message": "x"}})])
     with pytest.raises(ChatError, match=expected):
         s.send("hi")
+
+
+def overloaded():
+    return errors.APIError(503, {"error": {"message": "high demand", "status": "UNAVAILABLE"}})
+
+
+def test_overloaded_primary_falls_back_to_secondary_model():
+    s, client = session([overloaded(), text_reply("hola!")], fallback_model="gemini-2.5-flash")
+    assert s.send("hola") == "hola!"
+    assert [c["model"] for c in client.calls] == ["gemini-3.8-flash", "gemini-2.5-flash"]
+    assert s.last_model == "gemini-2.5-flash"
+
+
+def test_both_models_overloaded_gives_busy_message_and_rolls_back():
+    s, _ = session([overloaded(), overloaded()], fallback_model="gemini-2.5-flash")
+    with pytest.raises(ChatError, match="busy"):
+        s.send("hola")
+    assert s._history == []
+
+
+def test_config_errors_do_not_trigger_fallback():
+    s, client = session([errors.APIError(404, {"error": {"message": "x"}})],
+                        fallback_model="gemini-2.5-flash")
+    with pytest.raises(ChatError, match="GEMINI_MODEL"):
+        s.send("hola")
+    assert len(client.calls) == 1

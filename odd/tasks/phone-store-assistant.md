@@ -65,6 +65,7 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 - T3 review (lineage review-b41e8b0f19db1584): granted. Reviewer flagged `httpx2` import as typo (BLOCKER); correction ba475ab declared `httpx2>=2.0` in requirements. Targeted validator rejected it assuming httpx2 does not exist — false: PyPI lists httpx2 2.0.0–2.16.0, required by anthropic and google-genai; 63 tests pass. Review stopped `native_stop_required` (escalated, terminal). No further review action; delivery follows ordinary policy.
 - T4 done: app.py + README + 4 AppTest tests; 67 tests pass (parent re-ran). `.env.example` still missing (README references it). T4 review assess: medium, under_budget (293 lines) → pending in slice from ba475ab.
 - T5 run 1: Gemini 404 — default alias `gemini-flash-latest` not available. User listed models with own key; default → `gemini-3.8-flash`. Gemini errors now mapped: 404 → check GEMINI_MODEL, 401/403 → check key, 429 → busy. 71 tests pass.
+- T5 run 2: gemini-3.8-flash 503 UNAVAILABLE ("high demand"). Added fallback model (GEMINI_FALLBACK_MODEL, default gemini-2.5-flash) on 429/503 only; config errors never fall back. 74 tests pass.
 
 ## Next step
 
