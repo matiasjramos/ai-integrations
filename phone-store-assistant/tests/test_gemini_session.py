@@ -67,7 +67,8 @@ def test_function_call_loop_and_config():
     assert [d.name for d in declarations] == ["search_products", "check_stock", "create_lead"]
     assert all("additionalProperties" not in d.parameters_json_schema for d in declarations)
     contents = client.calls[1]["contents"]
-    assert [c.role for c in contents] == ["user", "model", "tool"]
+    assert [c.role for c in contents] == ["user", "model", "user"]
+    assert {c.role for c in contents} <= {"user", "model"}  # API rejects any other role
     responses = [p.function_response for p in contents[2].parts]
     assert [r.name for r in responses] == ["search_products", "check_stock"]
     assert "result" in responses[0].response

@@ -104,7 +104,8 @@ class GeminiChatSession:
                            else {"result": result.content})
                 parts.append(types.Part.from_function_response(
                     name=call.name, response=payload))
-            self._history.append(types.Content(role="tool", parts=parts))
+            # Function responses go back as a user turn: the API only accepts user/model roles.
+            self._history.append(types.Content(role="user", parts=parts))
         return _LIMIT_MSG
 
     def _generate(self):
