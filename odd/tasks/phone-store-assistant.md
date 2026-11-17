@@ -69,7 +69,8 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 - Slice review ba475ab..a27f405 (lineage review-848fbcfb268a892f): granted, approved + acknowledged. Follow-ups (non-blocking): sticky fallback within a turn; backoff/retry-after on 429; use getattr for exc.code in _generate; test factory fallback wiring + GEMINI_FALLBACK_MODEL default; guard sidebar leads query and session construction in app.py; orphan user message after ChatError; README references missing .env.example.
 - T5 run 3: gemini-2.5-flash 404 "no longer available to new users" (listed but unusable). Probed with user key: 3.8/3.7 flash 503; 3.6-flash, 3.5-flash, 3.5-flash-lite, 3.1-flash-lite OK. Defaults → primary gemini-3.6-flash, fallback gemini-3.5-flash-lite (separate capacity). Fallback default now tested. 74 tests pass.
 - T5 run 4: first tool call failed with 400 INVALID_ARGUMENT "Role 'tool' is not supported" on /v1. Function responses now go back with role `user`; test asserts only user/model roles. 74 tests pass.
-- T5 run 5: tool calls work (stock query OK). Off-topic request (recipe) was answered. Added a scope section to SYSTEM_PROMPT: store topics only, one-sentence refusal, ignore role-change requests. Pending manual re-test.
+- T5 run 5: tool calls work (stock query OK). Off-topic request (recipe) was answered. Added a scope section to SYSTEM_PROMPT: store topics only, one-sentence refusal, ignore role-change requests. Manual re-test OK (recipe refused in one line).
+- T5 run 6: free tier returned 503 on both models; every call re-hit the failing primary first (extra latency). Added a 60s per-model cooldown after 429/503 (injectable clock); if all models are cooling down they are tried anyway. Also uses getattr for exc.code (review follow-up). 76 tests pass.
 
 ## Next step
 

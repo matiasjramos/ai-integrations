@@ -6,6 +6,7 @@ responses back in one turn -> repeat until the model answers with text.
 
 import copy
 import logging
+import time
 
 from google.genai import errors, types
 
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 _LIMIT_MSG = "Sorry, I couldn't complete that request. Could you rephrase or try again?"
 _EMPTY_MSG = "Sorry, I couldn't generate an answer. Please try again."
 _TRANSIENT_CODES = {429, 503}  # rate limit / overloaded: retrying elsewhere can help
+_COOLDOWN_SECONDS = 60.0  # skip a model this long after a transient error
 
 
 def _message_for_status(code: int | None) -> str:
@@ -50,8 +52,10 @@ def _build_tool() -> types.Tool:
 
 class GeminiChatSession:
     def __init__(self, client, model: str, executor: ToolExecutor, max_iterations: int,
-                 fallback_model: str | None = None):
+                 fallback_model: str | None = None, clock=time.monotonic):
         self._client = client
+        self._clock = clock
+        self._cooldown_until: dict[str, float] = {}
         self._model = model
         # Tried in order; the fallback only kicks in on transient capacity errors.
         self._models = [model] + ([fallback_model] if fallback_model and fallback_model != model else [])
@@ -113,19 +117,26 @@ class GeminiChatSession:
 
         Capacity errors are transient and model-specific, so another model usually
         answers. Config errors (400/401/403/404) are re-raised: switching won't fix them.
+        A model that just failed is skipped for a cooldown, so every call doesn't pay
+        for a request we already expect to fail.
         """
-        for i, model in enumerate(self._models):
+        now = self._clock()
+        available = [m for m in self._models if self._cooldown_until.get(m, 0.0) <= now]
+        models = available or self._models  # all cooling down: try them anyway
+        for i, model in enumerate(models):
             self.last_model = model
             try:
                 return self._client.models.generate_content(
                     model=model, contents=self._history, config=self._config,
                 )
             except errors.APIError as exc:
-                is_last = i == len(self._models) - 1
-                if exc.code not in _TRANSIENT_CODES or is_last:
+                if getattr(exc, "code", None) not in _TRANSIENT_CODES:
+                    raise
+                self._cooldown_until[model] = self._clock() + _COOLDOWN_SECONDS
+                if i == len(models) - 1:
                     raise
                 logger.warning("Gemini %s unavailable (code=%s); falling back to %s",
-                               model, exc.code, self._models[i + 1])
+                               model, exc.code, models[i + 1])
         raise AssertionError("unreachable: _models is never empty")
 
     def _track_usage(self, response) -> None:

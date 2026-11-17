@@ -46,11 +46,19 @@ class FakeClient:
         return item
 
 
-def session(script, max_iterations=6, fallback_model=None):
+class Clock:
+    def __init__(self):
+        self.now = 0.0
+
+    def __call__(self):
+        return self.now
+
+
+def session(script, max_iterations=6, fallback_model=None, clock=None):
     executor = ToolExecutor(Catalog(), SqliteLeadRepository(":memory:"), LogNotifier())
     client = FakeClient(script)
     return GeminiChatSession(client, "gemini-3.8-flash", executor, max_iterations,
-                             fallback_model=fallback_model), client
+                             fallback_model=fallback_model, clock=clock or Clock()), client
 
 
 def test_function_call_loop_and_config():
@@ -135,6 +143,32 @@ def test_both_models_overloaded_gives_busy_message_and_rolls_back():
     with pytest.raises(ChatError, match="busy"):
         s.send("hola")
     assert s._history == []
+
+
+def test_failed_primary_is_skipped_during_cooldown_then_retried():
+    clock = Clock()
+    s, client = session(
+        [overloaded(), text_reply("a"), text_reply("b"), text_reply("c")],
+        fallback_model="gemini-2.5-flash", clock=clock,
+    )
+    s.send("one")  # primary 503 -> fallback answers
+    clock.now = 30
+    s.send("two")  # primary still cooling down: go straight to fallback
+    clock.now = 61
+    s.send("three")  # cooldown over: primary is tried again
+    assert [c["model"] for c in client.calls] == [
+        "gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.5-flash", "gemini-3.8-flash",
+    ]
+
+
+def test_all_models_cooling_down_still_tries_them():
+    clock = Clock()
+    s, client = session([overloaded(), overloaded(), text_reply("ok")],
+                        fallback_model="gemini-2.5-flash", clock=clock)
+    with pytest.raises(ChatError):
+        s.send("one")
+    assert s.send("two") == "ok"
+    assert client.calls[-1]["model"] == "gemini-3.8-flash"
 
 
 def test_config_errors_do_not_trigger_fallback():
