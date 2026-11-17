@@ -197,3 +197,11 @@ def test_summary_excludes_errors_from_rate():
     lines, passed, failed, errors = summarize(results)
     assert (passed, failed, errors) == (1, 1, 1)
     assert "50%" in lines[1]
+
+
+def test_bundled_dataset_is_valid_and_covers_every_category():
+    cases = load_cases(PROJECT_DIR / "evals" / "cases.json")
+    assert {c.category for c in cases} == {
+        "catalog_search", "stock", "not_in_catalog", "off_topic", "prompt_injection",
+        "lead_complete", "lead_missing_info", "browsing_no_lead",
+    }
