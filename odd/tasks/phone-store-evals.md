@@ -71,6 +71,8 @@ judged by numbers, not by one manual run.
 - E1 done: commit f443e81 (harness, runner, tests); suite 101 passed (76 + 25 new).
 - E2 done: 28 cases in 8 categories (4/4/3/3/4/4/3/3); suite 102 passed. Commit: see git log (`add initial eval cases`).
 
+- Slice review a27f405..3cfd653 (lens review-reliability): approved, acknowledged (authority burned). Non-blocking follow-ups: test that the busy predicate matches the real session message; test `run.main` (filters, exit codes, provider override); cooldown test for a single-model session; review cases.json text checks after the first real run.
+
 ## Next step
 
 E3: README "Evaluation" section; user runs `python -m evals.run` with his key and records the baseline here.
