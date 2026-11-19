@@ -48,13 +48,13 @@ Design choices:
 
 ## Failure modes
 
-| Failure | Behavior |
-| --- | --- |
-| Google Sheets down or malformed | Falls back to the JSON catalog, logged |
-| Sheets and JSON both down | Tool returns an error; the model says the catalog is unavailable |
-| Telegram down or unset | Lead is kept in SQLite; result has `seller_notified: false` |
-| LLM API error | Safe user-facing message (no traceback, no keys); history is rolled back so the conversation stays consistent |
-| Missing API key | The UI shows a setup message instead of crashing |
+| Failure                         | Behavior                                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Google Sheets down or malformed | Falls back to the JSON catalog, logged                                                                        |
+| Sheets and JSON both down       | Tool returns an error; the model says the catalog is unavailable                                              |
+| Telegram down or unset          | Lead is kept in SQLite; result has `seller_notified: false`                                                   |
+| LLM API error                   | Safe user-facing message (no traceback, no keys); history is rolled back so the conversation stays consistent |
+| Missing API key                 | The UI shows a setup message instead of crashing                                                              |
 
 ## Setup and run (Windows PowerShell)
 
@@ -79,21 +79,44 @@ Optional:
 
 API keys (`GEMINI_API_KEY`/`GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`) are read by the SDKs directly and never pass through app objects.
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `LLM_PROVIDER` | `gemini` | `gemini` or `claude` |
-| `GEMINI_MODEL` | `gemini-3.6-flash` | Gemini model |
-| `GEMINI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | Used when the primary model returns 503 (overloaded) or 429 (rate limited) |
-| `CLAUDE_MODEL` | `claude-opus-5-5` | Claude model (`claude-haiku-5-5` is cheaper) |
-| `CLAUDE_EFFORT` | `medium` | `low`, `medium` or `high` |
-| `MAX_TOOL_ITERATIONS` | `6` | Max model calls per user message |
-| `GOOGLE_SERVICE_ACCOUNT_FILE` | unset | Service-account JSON path |
-| `GOOGLE_SHEET_ID` | unset | Spreadsheet id |
-| `GOOGLE_SHEET_WORKSHEET` | `catalog` | Worksheet name |
-| `TELEGRAM_BOT_TOKEN` | unset | Bot token (unset: notifications are logged only) |
-| `TELEGRAM_CHAT_ID` | unset | Seller chat id |
-| `LEADS_DB_PATH` | `leads.db` | SQLite file |
-| `CATALOG_JSON_PATH` | `data/catalog.json` | JSON fallback catalog |
+| Variable                      | Default                 | Purpose                                                                    |
+| ----------------------------- | ----------------------- | -------------------------------------------------------------------------- |
+| `LLM_PROVIDER`                | `gemini`                | `gemini` or `claude`                                                       |
+| `GEMINI_MODEL`                | `gemini-3.6-flash`      | Gemini model                                                               |
+| `GEMINI_FALLBACK_MODEL`       | `gemini-3.5-flash-lite` | Used when the primary model returns 503 (overloaded) or 429 (rate limited) |
+| `CLAUDE_MODEL`                | `claude-opus-5-5`       | Claude model (`claude-haiku-5-5` is cheaper)                               |
+| `CLAUDE_EFFORT`               | `medium`                | `low`, `medium` or `high`                                                  |
+| `MAX_TOOL_ITERATIONS`         | `6`                     | Max model calls per user message                                           |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | unset                   | Service-account JSON path                                                  |
+| `GOOGLE_SHEET_ID`             | unset                   | Spreadsheet id                                                             |
+| `GOOGLE_SHEET_WORKSHEET`      | `catalog`               | Worksheet name                                                             |
+| `TELEGRAM_BOT_TOKEN`          | unset                   | Bot token (unset: notifications are logged only)                           |
+| `TELEGRAM_CHAT_ID`            | unset                   | Seller chat id                                                             |
+| `LEADS_DB_PATH`               | `leads.db`              | SQLite file                                                                |
+| `CATALOG_JSON_PATH`           | `data/catalog.json`     | JSON fallback catalog                                                      |
+
+## Evaluation
+
+Unit tests use fake clients, so they cannot catch model behavior. The evals run scripted
+conversations against the real model and check what it _did_, not its exact wording.
+
+```powershell
+.venv\Scripts\python -m evals.run                      # all cases
+.venv\Scripts\python -m evals.run --category off_topic # one category
+.venv\Scripts\python -m evals.run --case lead_multi_turn
+```
+
+- **Cases** (`evals/cases.json`): 28 conversations in 8 categories: catalog search, stock,
+  products not in the catalog, off-topic requests, prompt injection, complete purchase,
+  purchase with missing contact info, and browsing without buying.
+- **Deterministic checks**: tools called / not called, whether a lead was created and for
+  which product, and simple reply rules (must / must not contain, max length). No LLM judge.
+- **Isolation**: every case gets a fresh session, an in-memory SQLite and a log-only
+  notifier, so evals never touch real leads or Telegram.
+- **FAIL vs ERROR**: a provider outage (429/503 after retries) is an ERROR and is excluded
+  from the pass rate, so infrastructure noise is not mistaken for a quality regression.
+- **Baseline** (Gemini free tier, mostly answered by `gemini-3.5-flash-lite` because the
+  primary was rate limited): 28/28 passed.
 
 ## Cost
 
@@ -106,6 +129,6 @@ API keys (`GEMINI_API_KEY`/`GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`) are read by th
 - Cache catalog reads (today: one Sheets read per tool call).
 - Stream replies.
 - OpenAI-compatible adapter (covers GPT, DeepSeek and others).
-- Evals for lead-detection precision.
+- More eval cases (harder injections, ambiguous buying intent) and an LLM judge for tone.
 - Authentication for the seller view (the "Recent leads" panel is open; fine for fake data).
 - Verify Gemini's handling of `minimum` in tool schemas.

@@ -50,7 +50,7 @@ judged by numbers, not by one manual run.
 - [x] E1 Harness + unit tests (fake session; no network) — route: delegated writer
       (2+ non-trivial files).
 - [x] E2 Initial dataset (~25 cases over all categories) — same writer.
-- [ ] E3 README "Evaluation" section; user runs the evals once with his key and the
+- [x] E3 README "Evaluation" section; user runs the evals once with his key and the
       baseline pass rate is recorded here.
 
 ## Acceptance criteria
@@ -73,6 +73,8 @@ judged by numbers, not by one manual run.
 
 - Slice review a27f405..3cfd653 (lens review-reliability): approved, acknowledged (authority burned). Non-blocking follow-ups: test that the busy predicate matches the real session message; test `run.main` (filters, exit codes, provider override); cooldown test for a single-model session; review cases.json text checks after the first real run.
 
+- E3 done: README "Evaluation" section. Baseline run by user (2026-11-19, Gemini free tier, mostly gemini-3.5-flash-lite after 429/503 on primary): 28/28 PASS, 0 ERROR. One busy 429 on the fallback was retried and passed.
+
 ## Next step
 
-E3: README "Evaluation" section; user runs `python -m evals.run` with his key and records the baseline here.
+Feature done. Optional: address review follow-ups; add harder cases (the 100% baseline suggests the set is still easy).
