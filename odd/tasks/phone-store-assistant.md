@@ -48,6 +48,12 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 - [x] T3 Tools + ChatSession port + Claude and Gemini adapters (manual tool loops, strict tools, caching, error handling) + tests with fake clients. Route: delegated writer (2+ non-trivial files). Scope revised 2026-11-13: Gemini added by user request.
 - [x] T4 Streamlit chat UI + project README (problem, diagram, run, cost, improvements). Route: delegated writer (2 non-trivial files).
 - [ ] T5 Manual end-to-end run with real API key (user) + secret scan before push.
+- [x] T6 Pre-publish cleanup (review follow-ups). Route: delegated writer.
+  - [x] T6.1 Drop the user bubble after a `ChatError` (matches session rollback).
+  - [x] T6.2 Guard sidebar leads query and session construction in `app.py`.
+  - [x] T6.3 `ChatError.transient` flag replaces the "busy" substring in the eval harness.
+  - [x] T6.4 Tests for `evals.run.main`.
+  - [x] T6.5 Single-model cooldown test.
 
 ## Acceptance criteria
 
@@ -71,6 +77,7 @@ Strategy: ask-on-risk. Forecast ~600 authored lines incl. tests → slices per t
 - T5 run 4: first tool call failed with 400 INVALID_ARGUMENT "Role 'tool' is not supported" on /v1. Function responses now go back with role `user`; test asserts only user/model roles. 74 tests pass.
 - T5 run 5: tool calls work (stock query OK). Off-topic request (recipe) was answered. Added a scope section to SYSTEM_PROMPT: store topics only, one-sentence refusal, ignore role-change requests. Manual re-test OK (recipe refused in one line).
 - T5 run 6: free tier returned 503 on both models; every call re-hit the failing primary first (extra latency). Added a 60s per-model cooldown after 429/503 (injectable clock); if all models are cooling down they are tried anyway. Also uses getattr for exc.code (review follow-up). 76 tests pass.
+- T6 done: 121 tests pass (`.venv/Scripts/python -m pytest -q`). Commits: 1082c80 (items 1-2), f1b920d (item 3), 2c2e343 (items 4-5).
 
 ## Next step
 
