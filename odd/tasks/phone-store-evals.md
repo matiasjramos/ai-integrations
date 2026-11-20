@@ -77,4 +77,4 @@ judged by numbers, not by one manual run.
 
 ## Next step
 
-Feature done. Optional: address review follow-ups; add harder cases (the 100% baseline suggests the set is still easy).
+Feature done. Review follow-ups addressed in phone-store-assistant T6 (f1b920d transient flag, 2c2e343 run.main + single-model cooldown tests; cases.json text checks held on the first real run). Optional: add harder cases (the 100% baseline suggests the set is still easy).
