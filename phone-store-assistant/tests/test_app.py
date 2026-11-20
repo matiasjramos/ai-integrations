@@ -66,6 +66,41 @@ def test_chat_error_shows_error(monkeypatch):
     assert [e.value for e in at.error] == ["Service unavailable, try again."]
 
 
+def test_chat_error_drops_orphan_user_message(monkeypatch):
+    # The session rolls the failed turn back, so the UI must not keep it either.
+    at = _run(monkeypatch, FakeSession(error=ChatError("Service unavailable, try again.")))
+    at.chat_input[0].set_value("hi").run()
+    assert len(at.chat_message) == 0
+    assert at.session_state["messages"] == []
+    at.run()  # a later rerun keeps showing a clean history
+    assert len(at.chat_message) == 0
+
+
+def test_leads_query_failure_shows_warning_not_crash(monkeypatch):
+    from phone_store_assistant.leads import SqliteLeadRepository
+
+    def boom(self, *a, **k):
+        raise RuntimeError("db locked")
+
+    monkeypatch.setattr(SqliteLeadRepository, "list_recent", boom)
+    at = _run(monkeypatch, FakeSession())
+    assert not at.exception
+    assert any("recent leads" in w.value for w in at.warning)
+    assert len(at.chat_input) == 1
+
+
+def test_session_construction_failure_shows_error(monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("secret-ish detail")
+
+    monkeypatch.setattr(chat, "create_chat_session", boom)
+    at = AppTest.from_file(str(APP), default_timeout=30).run()
+    assert not at.exception
+    assert [e.value for e in at.error] == [
+        "Could not start the assistant. Check your provider configuration and restart."]
+    assert len(at.chat_input) == 0
+
+
 def test_missing_key_shows_setup(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY")
     at = _run(monkeypatch, FakeSession())
