@@ -11,7 +11,14 @@ from .tools import ToolExecutor
 
 
 class ChatError(Exception):
-    """Unrecoverable provider error. The message is safe to show to the user."""
+    """Unrecoverable provider error. The message is safe to show to the user.
+
+    `transient` marks capacity errors (rate limit / overloaded) where retrying later can help.
+    """
+
+    def __init__(self, message: str, transient: bool = False):
+        super().__init__(message)
+        self.transient = transient
 
 
 class ChatSession(Protocol):

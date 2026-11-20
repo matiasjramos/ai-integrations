@@ -85,7 +85,7 @@ class GeminiChatSession:
                 "Gemini API error: code=%s status=%s model=%s message=%s",
                 code, getattr(exc, "status", None), self.last_model, getattr(exc, "message", None),
             )
-            raise ChatError(_message_for_status(code)) from None
+            raise ChatError(_message_for_status(code), transient=code in _TRANSIENT_CODES) from None
         except OSError as exc:  # ConnectionError/TimeoutError are OSError subclasses
             del self._history[checkpoint:]
             logger.error("Gemini network error: %s", type(exc).__name__)

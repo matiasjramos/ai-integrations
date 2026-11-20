@@ -142,10 +142,6 @@ def evaluate(checks: dict, reply: str, calls: list[ToolCall], leads: list) -> li
     return failed
 
 
-def _is_busy(exc: ChatError) -> bool:
-    return "busy" in str(exc).lower()
-
-
 def run_case(
     case: Case,
     session_factory: Callable[[RecordingExecutor], object],
@@ -168,7 +164,7 @@ def run_case(
             for turn in case.turns:
                 reply = session.send(turn)
         except ChatError as exc:
-            if _is_busy(exc) and attempt < retries:
+            if exc.transient and attempt < retries:
                 attempt += 1
                 sleep(retry_wait)
                 continue

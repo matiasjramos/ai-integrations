@@ -44,7 +44,8 @@ class ClaudeChatSession:
             return self._run_loop()
         except anthropic.RateLimitError:
             self._rollback(checkpoint)
-            raise ChatError("The assistant is busy right now. Please try again shortly.") from None
+            raise ChatError("The assistant is busy right now. Please try again shortly.",
+                            transient=True) from None
         except anthropic.APIConnectionError:
             self._rollback(checkpoint)
             raise ChatError("Could not reach the assistant service. Please try again.") from None

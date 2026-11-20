@@ -126,7 +126,7 @@ def test_busy_retries_whole_case_then_passes():
 
     def factory(ex):
         built.append(ex)
-        steps = [ChatError("The model is busy")] if len(built) == 1 else ["hola"]
+        steps = [ChatError("The model is busy", transient=True)] if len(built) == 1 else ["hola"]
         return ScriptedSession(ex, steps)
 
     result = run_case(case({"lead_created": False}), factory, CATALOG, retries=2,
@@ -139,7 +139,7 @@ def test_busy_exhausts_retries_to_error():
     sleeps = []
     result = run_case(
         case({"lead_created": False}),
-        lambda ex: ScriptedSession(ex, [ChatError("busy")]),
+        lambda ex: ScriptedSession(ex, [ChatError("busy", transient=True)]),
         CATALOG, retries=2, retry_wait=1, sleep=sleeps.append,
     )
     assert result.status == ERROR and len(sleeps) == 2
@@ -151,6 +151,28 @@ def test_non_busy_error_does_not_retry():
                       lambda ex: ScriptedSession(ex, [ChatError("bad key")]),
                       CATALOG, sleep=sleeps.append)
     assert result.status == ERROR and sleeps == []
+
+
+def test_harness_retries_the_real_gemini_busy_error():
+    # Ties the retry predicate to what GeminiChatSession actually raises on 503.
+    from google.genai import errors
+
+    from phone_store_assistant.gemini_session import GeminiChatSession
+
+    class Overloaded:
+        def __init__(self):
+            self.models = self
+
+        def generate_content(self, **kwargs):
+            raise errors.APIError(503, {"error": {"message": "high demand"}})
+
+    sleeps = []
+    result = run_case(
+        case({"lead_created": False}),
+        lambda ex: GeminiChatSession(Overloaded(), "m", ex, 3),
+        CATALOG, retries=1, retry_wait=1, sleep=sleeps.append,
+    )
+    assert result.status == ERROR and sleeps == [1]
 
 
 def test_recording_executor_records_calls_and_errors():

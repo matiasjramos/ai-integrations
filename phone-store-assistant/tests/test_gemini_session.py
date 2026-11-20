@@ -177,3 +177,30 @@ def test_config_errors_do_not_trigger_fallback():
     with pytest.raises(ChatError, match="GEMINI_MODEL"):
         s.send("hola")
     assert len(client.calls) == 1
+
+
+@pytest.mark.parametrize(("code", "transient"),
+                         [(429, True), (503, True), (500, False), (404, False), (403, False)])
+def test_chat_error_transient_flag_follows_status(code, transient):
+    s, _ = session([errors.APIError(code, {"error": {"message": "x"}})])
+    with pytest.raises(ChatError) as info:
+        s.send("hi")
+    assert info.value.transient is transient
+
+
+def test_network_error_is_not_transient():
+    s, _ = session([ConnectionError("down")])
+    with pytest.raises(ChatError) as info:
+        s.send("hi")
+    assert info.value.transient is False
+
+
+def test_single_model_503_records_cooldown_and_is_still_tried_next_call():
+    clock = Clock()
+    s, client = session([overloaded(), text_reply("ok")], fallback_model=None, clock=clock)
+    with pytest.raises(ChatError):
+        s.send("one")
+    assert s._cooldown_until == {"gemini-3.8-flash": 60.0}
+    clock.now = 10  # still cooling down, but it is the only model: try it anyway
+    assert s.send("two") == "ok"
+    assert [c["model"] for c in client.calls] == ["gemini-3.8-flash"] * 2

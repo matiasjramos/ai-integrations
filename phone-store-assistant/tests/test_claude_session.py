@@ -142,3 +142,16 @@ def test_api_errors_become_chat_error_and_roll_back(exc):
     assert s.send("three") == "recovered"
     assert [m["content"] for m in client.calls[2]["messages"] if m["role"] == "user"] == [
         "one", "three"]
+
+
+def test_rate_limit_is_transient_others_are_not():
+    request = httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
+    for exc, transient in [
+        (_api_status_error(anthropic.RateLimitError, 429), True),
+        (_api_status_error(anthropic.InternalServerError, 500), False),
+        (anthropic.APIConnectionError(request=request), False),
+    ]:
+        s, _ = session([exc])
+        with pytest.raises(ChatError) as info:
+            s.send("x")
+        assert info.value.transient is transient
